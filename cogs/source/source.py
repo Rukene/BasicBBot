@@ -155,7 +155,7 @@ class Source(commands.Cog):
         lb = bank.get_leaderboard(limit=limit)
         table = []
         for i, account in enumerate(lb):
-            table.append([i+1, account.owner.display_name, account.balance])
+            table.append([i+1, account.owner.name, account.balance])
         embed = discord.Embed(title=f"**Top des plus riches** · *{guild.name}*", description=pretty.codeblock(tabulate.tabulate(table, headers=('#', 'Membre', 'Solde')), lang='css'), color=pretty.DEFAULT_EMBED_COLOR)
         text = f"Nb. de comptes · `{bank.accounts_count}`\n"
         text += f"Total crédits · `{bank.total_balance} {bankio.CURRENCY_SYMBOL}`\n"
