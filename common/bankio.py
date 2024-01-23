@@ -104,9 +104,10 @@ class GuildBank:
         return self.__accounts[user.id]
     
     def _get_bank_accounts(self, *, predicate: Callable[['BankAccount'], bool] = lambda _: True) -> list['BankAccount']:
-        ids = [row['user_id'] for row in self._conn.execute('SELECT user_id FROM accounts').fetchall()]
         members = {member.id: member for member in self.guild.members}
-        accounts = [self._get_bank_account(members[id]) for id in ids]
+        with closing(self._conn.cursor()) as cur:
+            cur.execute('SELECT user_id FROM accounts')
+            accounts = [self._get_bank_account(members[row['user_id']]) for row in cur.fetchall()]
         if predicate is not None:
             accounts = list(filter(predicate, accounts))
         return accounts
