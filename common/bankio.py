@@ -147,10 +147,7 @@ class GuildBank:
         
         :param account: Compte à classer"""
         lb = sorted(self._get_bank_accounts(), key=lambda a: a.balance, reverse=True)
-        for i, a in enumerate(lb):
-            if a == account:
-                return i + 1
-        return self.accounts_count
+        return lb.index(account) + 1 if account in lb else self.accounts_count
     
     @property
     def accounts_count(self) -> int:
