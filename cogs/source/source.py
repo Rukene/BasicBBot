@@ -117,8 +117,6 @@ class Source(commands.Cog):
         embed.add_field(name="Solde", value=pretty.codeblock(f"{account.balance} {bankio.CURRENCY_SYMBOL}", lang='css'))
         embed.add_field(name="Var/24h", value=pretty.codeblock(f"{account.get_balance_variation(start=yesterday):+}", lang='diff'))
         rank = bank.get_account_rank(account)
-        if rank is not None:
-            rank = bank.accounts_count
         embed.add_field(name="Rang", value=pretty.codeblock(f"{rank}" + ('e' if rank > 1 else 'er')))
         
         logs = account.fetch_logs(limit=5)
