@@ -64,9 +64,9 @@ class Source(commands.Cog):
         elif daily_count == threshold:
             self.set_daily_tracking(message.author, daily_count)
             account = bankio.get_account(message.author)
-            if account.balance > self.get_daily_wealth_limit(guild):
-                return
             amount = self.get_daily_amount(guild)
+            if account.balance + amount > self.get_daily_wealth_limit(guild):
+                return
             if message.author.premium_since:
                 amount += self.get_premium_daily_amount(guild)
                 account.deposit(amount, reason="Aide quotidienne (+ premium)")
