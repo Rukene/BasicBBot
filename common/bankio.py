@@ -108,9 +108,7 @@ class GuildBank:
         with closing(self._conn.cursor()) as cur:
             cur.execute('SELECT user_id FROM accounts')
             accounts = [self._get_bank_account(members[row['user_id']]) for row in cur.fetchall()]
-        if predicate is not None:
-            accounts = list(filter(predicate, accounts))
-        return accounts
+        return list(filter(predicate, accounts))
     
     # Logs -----------------------
     
