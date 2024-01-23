@@ -193,6 +193,9 @@ class BankAccount:
         if isinstance(other, BankAccount):
             return self.owner == other.owner and self.balance == other.balance
         return NotImplemented
+    
+    def __hash__(self):
+        return hash(f'{self.owner.id}{self.owner.guild.id}')
             
     # Solde -----------------
     
@@ -352,6 +355,9 @@ class BankLog:
         if isinstance(other, BankLog):
             return self.id == other.id and self.account == other.account
         return NotImplemented 
+    
+    def __int__(self):
+        return self.amount
     
     # Création ----------------
     
