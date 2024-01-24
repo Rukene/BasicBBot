@@ -143,12 +143,12 @@ class Source(commands.Cog):
         logs = sorted(account.logs, key=lambda log: log.timestamp, reverse=True)
         today_midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         text = ""
-        for log in logs:
+        for i, log in enumerate(logs):
             if log.timestamp.timestamp() > today_midnight.timestamp():
-                text += f"<t:{int(log.timestamp.timestamp())}:t> `{log.amount:+}` *{pretty.shorten_text(log.reason, 50)}*\n"
+                text += f"{i + 1}. <t:{int(log.timestamp.timestamp())}:t> `{log.amount:+}` *{pretty.shorten_text(log.reason, 50)}*\n"
             else:
-                text += f"<t:{int(log.timestamp.timestamp())}:f> `{log.amount:+}` *{pretty.shorten_text(log.reason, 50)}*\n"
-            if len(text) > 2000:
+                text += f"{i + 1}. <t:{int(log.timestamp.timestamp())}:f> `{log.amount:+}` *{pretty.shorten_text(log.reason, 50)}*\n"
+            if len(text) > 1000:
                 pages.append(discord.Embed(title=f"**Logs bancaires** · *{account.owner.display_name}*", description=text, color=account.owner.color))
                 text = ""
         if text:
