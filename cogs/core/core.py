@@ -143,16 +143,17 @@ class Core(commands.Cog):
     """Module central du bot, contenant des commandes de base."""
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.data = dataio.get_cog_data(self)
+        self.data = dataio.get_instance(self)
         
         # Préférences globales par défaut des serveurs
         default_preferences = {
             'MainTextChannelID': 0,
             'Timezone': 'Europe/Paris'
         }
-        self.data.append_collection_initializer_for(discord.Guild, 'global_settings', default_values=default_preferences)
+        preferences = dataio.DictTableDefault('global_settings', default_preferences)
+        self.data.set_defaults(discord.Guild, preferences)
         
-        self.timezones = pytz.all_timezones
+        self.__timezones = pytz.all_timezones
         
         self._last_result: Optional[Any] = None
 
@@ -340,17 +341,17 @@ class Core(commands.Cog):
         :param guild: Serveur concerné
         :return: Dictionnaire de strings des préférences globales
         """
-        return self.data.get_collection_values(guild, 'global_settings')
+        return self.data.get(guild).get_dict_values('global_settings')
     
     def get_guild_global_setting(self, guild: discord.Guild, key: str, *, cast: type = str) -> Any:
         """Récupère une valeur d'une préférence globale
 
         :param guild: Serveur concerné
         :param key: Clé de la préférence
-        :param cast: Type de la valeur à récupérer, par défaut str
+        :param cast: Type dans lequel convertir la valeur
         :return: Valeur de la préférence
         """
-        return self.data.get_collection_value(guild, 'global_settings', key, cast=cast)
+        return self.data.get(guild).get_dict_value('global_settings', key, cast=cast)
     
     def set_guild_global_setting(self, guild: discord.Guild, key: str, value: Any) -> None:
         """Définit la valeur d'une préférence globale
@@ -359,7 +360,7 @@ class Core(commands.Cog):
         :param key: Clé de la préférence
         :param value: Valeur à définir (doit pouvoir être convertie en str)
         """
-        self.data.set_keyvalue_table_value(guild, 'global_settings', key, value)
+        self.data.get(guild).set_dict_value('global_settings', key, value)
         
     config_group = app_commands.Group(name='config', description="Paramètres généraux du bot sur ce serveur", guild_only=True, default_permissions=discord.Permissions(manage_guild=True))
     
@@ -378,7 +379,7 @@ class Core(commands.Cog):
             await interaction.response.send_message(f"**Fuseau horaire actuel** • `{current_timezone}`", ephemeral=True)
             return
         
-        if timezone not in self.timezones:
+        if timezone not in self.__timezones:
             await interaction.response.send_message(f"**Erreur** • Le fuseau horaire `{timezone}` n'existe pas. Consultez https://en.wikipedia.org/wiki/List_of_tz_database_time_zones pour la liste des fuseaux horaires disponibles.", ephemeral=True)
             return
         
@@ -387,7 +388,7 @@ class Core(commands.Cog):
         
     @cmd_config_timezone.autocomplete('timezone')
     async def autocomplete_timezone(self, interaction: discord.Interaction, current: str):
-        r = fuzzy.finder(current, self.timezones)
+        r = fuzzy.finder(current, self.__timezones)
         return [app_commands.Choice(name=t, value=t) for t in r][:10]
     
     @config_group.command(name="mainchannel")

@@ -16,7 +16,7 @@ class Source(commands.Cog):
     """Gestion centralisée de l'économie du serveur"""
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.data = dataio.get_cog_data(self)
+        self.data = dataio.get_instance(self)
         
         default_settings = {
             'DailyAmount': 100, # Crédits quotidiens
@@ -24,18 +24,17 @@ class Source(commands.Cog):
             'DailyMsgThreshold': 10, # Nombre de messages nécessaires par jour pour obtenir les crédits quotidiens
             'DailyWealthLimit': 1000 # Limite de richesse pour obtenir les crédits quotidiens
         }
-        self.data.append_collection_initializer_for(discord.Guild, 'settings', default_values=default_settings)
+        settings = dataio.DictTableDefault('settings', default_settings)
         
         # Tracking des crédits quotidiens
-        tracking = dataio.TableInitializer(
-            table_name='tracking',
-            create_query="""CREATE TABLE IF NOT EXISTS tracking (
+        tracking = dataio.TableDefault(
+            """CREATE TABLE IF NOT EXISTS tracking (
                 user_id INTEGER PRIMARY KEY,
                 last_daily TEXT,
                 daily_count INTEGER DEFAULT 0
                 )"""
         )
-        self.data.append_initializers_for(discord.Guild, [tracking])
+        self.data.set_defaults(discord.Guild, settings, tracking)
         
         self.show_user_account = app_commands.ContextMenu(
             name='Compte bancaire',
@@ -77,24 +76,24 @@ class Source(commands.Cog):
     
     def get_daily_amount(self, guild: discord.Guild) -> int:
         """Renvoie le montant de crédits quotidiens pour un membre"""
-        return self.data.get_collection_value(guild, 'settings', 'DailyAmount', cast=int)
+        return self.data.get(guild).get_dict_value('settings', 'DailyAmount', cast=int)
     
     def get_premium_daily_amount(self, guild: discord.Guild) -> int:
         """Renvoie le montant de crédits quotidiens supplémentaires pour un membre avec le rôle premium"""
-        return self.data.get_collection_value(guild, 'settings', 'PremiumDailyAmount', cast=int)
+        return self.data.get(guild).get_dict_value('settings', 'PremiumDailyAmount', cast=int)
     
     def get_daily_msg_threshold(self, guild: discord.Guild) -> int:
         """Renvoie le nombre de messages nécessaires pour obtenir les crédits quotidiens"""
-        return self.data.get_collection_value(guild, 'settings', 'DailyMsgThreshold', cast=int)
+        return self.data.get(guild).get_dict_value('settings', 'DailyMsgThreshold', cast=int)
     
     def get_daily_wealth_limit(self, guild: discord.Guild) -> int:
         """Renvoie la limite de richesse pour obtenir les crédits quotidiens"""
-        return self.data.get_collection_value(guild, 'settings', 'DailyWealthLimit', cast=int)
+        return self.data.get(guild).get_dict_value('settings', 'DailyWealthLimit', cast=int)
     
     def get_daily_tracking(self, user: discord.Member) -> int:
         """Renvoie la date du dernier crédit quotidien et le nombre de messages envoyés depuis"""
         today = datetime.now(self.get_timezone(user.guild)).strftime('%Y-%m-%d')
-        r = self.data.get(user.guild).fetchone("SELECT last_daily, daily_count FROM tracking WHERE user_id = ?", (user.id,))
+        r = self.data.get(user.guild).fetch("SELECT last_daily, daily_count FROM tracking WHERE user_id = ?", (user.id,))
         if r is None:
             return 0
         if r['last_daily'] != today:
@@ -276,7 +275,7 @@ class Source(commands.Cog):
         :param amount: Nouveau montant (0 pour désactiver)"""
         if not isinstance(interaction.guild, discord.Guild):
             return await interaction.response.send_message("Cette commande n'est pas disponible en messages privés.", ephemeral=True)
-        self.data.set_keyvalue_table_value(interaction.guild, 'settings', 'DailyAmount', amount)
+        self.data.get(interaction.guild).set_dict_value('settings', 'DailyAmount', amount)
         if amount == 0:
             return await interaction.response.send_message(f"**Montant modifié** · Les crédits quotidiens sont désactivés.", silent=True)
         await interaction.response.send_message(f"**Montant modifié** · Le nouveau montant des crédits quotidiens est de `{amount} {bankio.CURRENCY_SYMBOL}`.", silent=True)
@@ -289,7 +288,7 @@ class Source(commands.Cog):
         :param amount: Nouveau montant"""
         if not isinstance(interaction.guild, discord.Guild):
             return await interaction.response.send_message("Cette commande n'est pas disponible en messages privés.", ephemeral=True)
-        self.data.set_keyvalue_table_value(interaction.guild, 'settings', 'PremiumDailyAmount', amount)
+        self.data.get(interaction.guild).set_dict_value('settings', 'PremiumDailyAmount', amount)
         if amount == 0:
             return await interaction.response.send_message(f"**Montant modifié** · Les crédits quotidiens supplémentaires pour les membres premium sont désactivés.", silent=True)
         await interaction.response.send_message(f"**Montant modifié** · Le nouveau montant des crédits quotidiens pour les membres premium est de `{amount} {bankio.CURRENCY_SYMBOL}`.", silent=True)
@@ -302,7 +301,7 @@ class Source(commands.Cog):
         :param threshold: Nouveau nombre de messages"""
         if not isinstance(interaction.guild, discord.Guild):
             return await interaction.response.send_message("Cette commande n'est pas disponible en messages privés.", ephemeral=True)
-        self.data.set_keyvalue_table_value(interaction.guild, 'settings', 'DailyMsgThreshold', threshold)
+        self.data.get(interaction.guild).set_dict_value('settings', 'DailyMsgThreshold', threshold)
         await interaction.response.send_message(f"**Nombre de messages modifié** · Le nouveau nombre de messages nécessaires pour obtenir les crédits quotidiens est de `{threshold}`.", silent=True)
 
     @daily_subgroup.command(name='wealthlimit')
@@ -313,7 +312,7 @@ class Source(commands.Cog):
         :param limit: Nouvelle limite"""
         if not isinstance(interaction.guild, discord.Guild):
             return await interaction.response.send_message("Cette commande n'est pas disponible en messages privés.", ephemeral=True)
-        self.data.set_keyvalue_table_value(interaction.guild, 'settings', 'DailyWealthLimit', limit)
+        self.data.get(interaction.guild).set_dict_value('settings', 'DailyWealthLimit', limit)
         await interaction.response.send_message(f"**Limite modifiée** · La nouvelle limite de richesse pour obtenir les crédits quotidiens est de `{limit} {bankio.CURRENCY_SYMBOL}`.", silent=True)
 
 async def setup(bot):

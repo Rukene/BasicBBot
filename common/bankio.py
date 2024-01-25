@@ -1,12 +1,14 @@
-# Script central de l'économie du bot
+"""
+### Système centralisé d'économie virtuelle pour le bot
+Peut être utilisé tel quel dans le module, la gestion des bases de données se faisant automatiquement en fonction de la provenance du membre visé.
+"""
 
-from collections import namedtuple
 from datetime import datetime
 import json
 import sqlite3
 from contextlib import closing
 from pathlib import Path
-from typing import Any, Callable, NamedTuple
+from typing import Any, Callable
 
 import discord
 from discord.ext import commands
