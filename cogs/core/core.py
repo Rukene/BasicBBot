@@ -1,6 +1,8 @@
 # Ce module est essentiel dans le fonctionnement du bot et ne doit pas être supprimé
 
 import io
+import subprocess
+import sys
 import logging
 import textwrap
 import traceback
@@ -290,6 +292,28 @@ class Core(commands.Cog):
             return
         tz = self.get_guild_global_setting(interaction.guild, 'Timezone')
         await interaction.response.send_message(f"**Date locale** • {datetime.now(pytz.timezone(tz)).strftime('%d/%m/%Y %H:%M:%S')} ({tz})")
+        
+    @app_commands.command(name="info")
+    async def info(self, interaction: discord.Interaction) -> None:
+        """Retourne des informations sur le bot"""
+        embed = discord.Embed(title="Informations sur le bot", color=pretty.DEFAULT_EMBED_COLOR)
+        botuser = self.bot.user
+        if not botuser:
+            await interaction.response.send_message("**Erreur** • Le bot n'est pas connecté.", ephemeral=True)
+            return
+        embed.set_author(name=botuser.name, icon_url=botuser.display_avatar, url='https://github.com/GitAcrown/MAGI')
+        desc = f"***{botuser.name}*** est un bot Discord francophone développé par *@acrone*, dérivé du bot ***NERON*** du même développeur pour offrir des fonctionnalités économiques aux serveurs."""
+        embed.description = desc
+        embed.add_field(name="Serveurs", value=f"`{len(self.bot.guilds)}`")
+        
+        python_ver = sys.version_info
+        embed.add_field(name="Python", value=f"`{python_ver.major}.{python_ver.minor}.{python_ver.micro}`")
+        dpy_ver = discord.__version__
+        embed.add_field(name="Discord.py", value=f"`{dpy_ver}`")
+        commit_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
+        embed.add_field(name="Version du code source", value=f"`{commit_hash}`")
+    
+        await interaction.response.send_message(embed=embed)
                 
     # Commandes d'aide des commandes ------------------------------
     
