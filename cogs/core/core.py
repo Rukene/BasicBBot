@@ -304,12 +304,12 @@ class Core(commands.Cog):
         embed.set_author(name=botuser.name, icon_url=botuser.display_avatar, url='https://github.com/GitAcrown/MAGI')
         desc = f"***{botuser.name}*** est un bot Discord francophone développé par *@acrone*, dérivé du bot ***NERON*** du même développeur pour offrir des fonctionnalités économiques aux serveurs."""
         embed.description = desc
-        embed.add_field(name="Serveurs", value=f"`{len(self.bot.guilds)}`")
         
         python_ver = sys.version_info
         dpy_ver = discord.__version__
         commit_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
         embed.add_field(name="Version", value=f"Python `{python_ver.major}.{python_ver.minor}.{python_ver.micro}`\nDiscord.py `{dpy_ver}`\nCode source `{commit_hash}`")
+        embed.add_field(name="Présence", value=f"Serveurs `{len(self.bot.guilds)}`\nUtilisateurs `{len(self.bot.users)}`")
     
         await interaction.response.send_message(embed=embed)
                 
