@@ -307,11 +307,9 @@ class Core(commands.Cog):
         embed.add_field(name="Serveurs", value=f"`{len(self.bot.guilds)}`")
         
         python_ver = sys.version_info
-        embed.add_field(name="Python", value=f"`{python_ver.major}.{python_ver.minor}.{python_ver.micro}`")
         dpy_ver = discord.__version__
-        embed.add_field(name="Discord.py", value=f"`{dpy_ver}`")
         commit_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
-        embed.add_field(name="Version du code source", value=f"`{commit_hash}`")
+        embed.add_field(name="Version", value=f"Python `{python_ver.major}.{python_ver.minor}.{python_ver.micro}`\nDiscord.py `{dpy_ver}`\nCode source `{commit_hash}`")
     
         await interaction.response.send_message(embed=embed)
                 
